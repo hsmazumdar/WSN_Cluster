@@ -24,3 +24,8 @@ Algorithm:
 19. Update grpsz[]
 20. Result: Mark all cluster heads with cluster members	 
 21. End
+
+
+<img src="Readme_files/Main.png">
+
+Figure-1 Simulation of a Wireless Sensor Network (WSN) with interactive GUI to demonstrate a new Novel Energy Efficient Routing Algorithm. Initially populate selected number of nodes, with random placement on canvas using 'File' menu of by simply pressing (Cnt+d)
