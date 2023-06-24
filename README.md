@@ -8,19 +8,19 @@ Algorithm:
 3. grpssz = Get number of clusters
 4. grpsz[] = Get node size of each clusters (temp only)
 5. dist[][] = Get distance between all nodes
-i = 0;
-best = a big number;
-loop1:
-	chn = Get furthest node as cluster head node ch_i
-	Mark grpsz[i] nearest cluster members state as -1
-	Choos new cluster head in center of gravity of i_th cluster as ch_i
-	i = i + 1
-	if (i < grpssz) 
-	 Goto loop1
-goodness = sum of distance between all cluster-heads to members
-Include nearest members of other groups to each ch by excluding from present group
-if(best > goodness)
-	Goto loop1  
-Update grpsz[]
-Result: Mark all cluster heads with cluster members	 
-End
+6. i = 0;
+7. best = a big number;
+8. loop1:
+9. 	chn = Get furthest node as cluster head node ch_i
+10.	Mark grpsz[i] nearest cluster members state as -1
+11.	Choos new cluster head in center of gravity of i_th cluster as ch_i
+12.	i = i + 1
+13.	if (i < grpssz) 
+14.	 Goto loop1
+15. goodness = sum of distance between all cluster-heads to members
+16. Include nearest members of other groups to each ch by excluding from present group
+17. if(best > goodness)
+18.	Goto loop1  
+19. Update grpsz[]
+20. Result: Mark all cluster heads with cluster members	 
+21. End
