@@ -2,8 +2,9 @@
 A Simple Clustering Algorithm for Wireless Sensor Networks (WSN)
 
 Wireless Sensor Networks (WSNs) consist of numerous small, energy-constrained sensor nodes deployed in a geographic area for monitoring and data collection purposes. Due to their limited resources and energy constraints, efficient management and data processing techniques are crucial for the effective operation of WSNs. Clustering algorithms play a vital role in enhancing the network performance by organizing the sensor nodes into groups called clusters. The proposed algorithm utilizes a distributed approach to form clusters, where each cluster has a designated cluster head responsible for managing the intra-cluster communication and aggregating the data from member nodes. 
-The cluster formation process begins with an initial network setup, where nodes are randomly deployed in the network area. The algorithm assumes all nodes are localized using received signal strength from nearest nodes as proposed in https://github.com/hsmazumdar/WSN_Localizer/tree/main . The algorithm employs a mechanism to dynamically 
-select cluster heads based on their residual energy, communication range, and connectivity with other nodes.
+The cluster formation process begins with an initial network setup, where nodes are randomly deployed in the network area. 
+
+The algorithm assumes all nodes are localized using received signal strength from nearest nodes as proposed in https://github.com/hsmazumdar/WSN_Localizer/tree/main . The algorithm employs a mechanism to dynamically select cluster heads based on their residual energy, communication range, and connectivity with other nodes.
 
 Algorithm:
 
