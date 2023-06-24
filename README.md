@@ -3,11 +3,11 @@ A Simple Clustering Algorithm for Wireless Sensor Networks (WSN)
 
 Algorithm:
 
-Start
-nodsz = Get number of nodes
-grpssz = Get number of clusters
-grpsz[] = Get node size of each clusters (temp only)
-dist[][] = Get distance between all nodes
+1. Start
+2. nodsz = Get number of nodes
+3. grpssz = Get number of clusters
+4. grpsz[] = Get node size of each clusters (temp only)
+5. dist[][] = Get distance between all nodes
 i = 0;
 best = a big number;
 loop1:
