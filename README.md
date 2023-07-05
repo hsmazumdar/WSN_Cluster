@@ -31,7 +31,7 @@ Algorithm:
 21. End
 
 
-<img src="Readme_files/Main.png">
+<img src="Readme_files/Main.jpg">
 
 Figure-1 Simulation of a Wireless Sensor Network (WSN) with interactive GUI to demonstrate a new Novel Clustering algorithm.
 
