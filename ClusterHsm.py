@@ -17,20 +17,6 @@ nodGrp = []
 
 
 # *********************************************
-def GetRandomNodes2(nodes2):
-    global nodes
-    nodes = []
-    for val in range(len(nodes2)):
-        col2 = []
-        col2.append(val)  # new sno
-        col2.append(nodes2[val][0])  # x
-        col2.append(nodes2[val][1])  # y
-        col2.append(nodes2[val][3])  # grpno
-        nodes.append(col2)
-    a = 123
-
-
-# *********************************************
 def GetRandomNodes(nods, gapx, wdt, gapy, hgt):
     arr1 = []
     for val in range(nods):
@@ -219,6 +205,39 @@ def make_nodGrp(nds, grs):
         sum -= int(nodGrp[i])
     a = 123
     return nodGrp
+
+
+# Populate my nearest mynodes **********************************
+def populate_mynodes(txrange):
+    global nodes, srcno, dstno, mynodes
+    mynodes = []
+    for i in range(len(nodes)):
+        buf1 = []
+        for j in range(len(nodes)):
+            if i != j:
+                buf2 = []
+                d = distance_n1_n2(i, j)
+                buf2.append(d)
+                buf2.append(j)
+                buf1.append(buf2)
+        buf1.sort()
+        mynds = []
+        for k in range(len(buf1)):
+            if buf1[k][0] <= txrange:
+                mynds.append(buf1[k][1])
+        mynodes.append(mynds)
+    a = 123
+
+
+# get distance between n1,n2 ***********************************
+def distance_n1_n2(n1, n2):
+    d1x = nodes[n1][1]
+    d1y = nodes[n1][2]
+    d2x = nodes[n2][1]
+    d2y = nodes[n2][2]
+    dst2 = math.sqrt((d1x - d2x) * (d1x - d2x) + (d1y - d2y) * (d1y - d2y))
+    dst2 = round(dst2, 2)
+    return dst2
 
 
 # *********************************************

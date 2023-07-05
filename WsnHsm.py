@@ -13,6 +13,7 @@ from tkinter import simpledialog
 import tkinter.simpledialog as simpledialog
 from tkinter import filedialog
 from tkinter.filedialog import asksaveasfile
+import threading
 import keyboard
 import random
 import os
@@ -59,17 +60,61 @@ test_acos = 0
 test_sin = 0
 test_cos = 0
 area_min = 9999
+sink = (-50, -50)
+tx_range = 20  # 20% of distmax
 
-
+# Function timer event ****************************************
+def timer_event():
+    global count, minerr, grpsize
+    draw_grps()
+    optimize_grps()
+    if far_nod_err<minerr:
+        minerr=far_nod_err
+        
+    # Code to execute when the timer event occurs
+    print("Timer event occurred!")
+    count = count + 1
+    if(count<5):
+        timer = threading.Timer(0.100, timer_event)
+        timer.start()
+    else:    
+        count = 0
+        if minerr>0:
+            grpsize=grpsize+1
+            text_grpmx.delete(0, tk.END)  # Clear existing text
+            text_grpmx.insert(tk.END, str(grpsize))
+            timer = threading.Timer(0.10, timer_event)
+            timer.start()
+            a=123
+        print("Timer event completed.")
+        
 # Function to open the popup window ***************************
 def open_popup_max_nodes():
     global nodemx
+    nodemx = int(text_ndmx.get())
     default_text = str(nodemx)
     text = simpledialog.askstring(
         "Enter Text", "Enter Max Nodes:", initialvalue=default_text
     )
     if text:
         nodemx = int(text)
+        text_ndmx.delete(0, tk.END)  # Clear existing text
+        text_ndmx.insert(tk.END, str(nodemx))
+
+
+# Function to open the popup window **************************
+def open_popup_transmit_range():  # set transmit_range in % of max distance
+    global tx_range, text_txrng
+    default_text = str(tx_range * 100.0 / dstMx)
+    text = simpledialog.askstring(
+        "Enter Text", "Enter Max Nodes:", initialvalue=default_text
+    )
+    if text:
+        dt = float(text)
+        tx_range = int(dt * dstMx / 100.0)
+        text_txrng.delete(0, tk.END)  # Clear existing text
+        text_txrng.insert(tk.END, str(text))
+        # set mynodes
 
 
 # Function to open the popup window **************************
@@ -85,10 +130,25 @@ def open_popup_max_groups():
     )
     if text:
         grpsize = int(text)
+        text_grpmx.delete(0, tk.END)  # Clear existing text
+        text_grpmx.insert(tk.END, str(grpsize))
 
 
-# Function popup auto_groups window **************************
-def open_popup_auto_groups():
+# Function auto_grouping ************************************
+def auto_grouping():
+    global count,grpsize,minerr
+    clst.nodes = node
+    clst.populate_mynodes(txrange)
+    grpsize=2
+    text_grpmx.delete(0, tk.END)
+    text_grpmx.insert(tk.END, str(grpsize))
+    nodGrp = clst.make_nodGrp(nodemx, grpsize)  # number of nodes per cluster
+    # mnd = clst.mynodes[3]  # ??????????????
+    minerr=1000 # any big number
+    timer = threading.Timer(0.10, timer_event)
+    timer.start()
+    count = 0
+
     a = 123
 
 
@@ -144,7 +204,8 @@ def GetRandomNodes(nods, gapx, wdt, gapy, hgt):
 # Draw node[] with sno ****************************************
 def draw_nodes():
     global nodemx, screen_width, screen_height, distmax, txrange, distmax, nodeerr
-    global gridX, gridY, ofsX, ofsY
+    global gridX, gridY, ofsX, ofsY, text_ndmx
+    nodemx = int(text_ndmx.get())
     nodeerr = []
     mxnodes = int(nodemx)
     canvas.config(width=screen_width, height=screen_height)
@@ -155,6 +216,7 @@ def draw_nodes():
     for i in range(len(node)):
         draw_this_node(i, "blue", 2, "white")
         nodeerr.append(0)
+    draw_sink(sink, "green", 4, "yellow")
     canvas.pack()
     distmax = math.sqrt(screen_width * screen_width + screen_height * screen_height)
     txrange = distmax / grpsize
@@ -188,6 +250,7 @@ def re_draw_nodes():
         nodexy[i][1] = 0  # [ndx][sno,x,y,state]
         nodexy[i][2] = 0  # [ndx][sno,x,y,state]
         nodexy[i][3] = 0  # [ndx][sno,x,y,state]
+    draw_sink(sink, "green", 4, "yellow")
     canvas.pack()
     a = 123
 
@@ -216,22 +279,22 @@ def draw_this_node(ndx, col, wdt, bcol):
 
 
 # Draw One Node nodexy[ndx] of width wdt **********************
-def draw_this_nodexy(ndx, col, wdt, bcol):
+def draw_sink(sink, col, wdt, bcol):
     global node
     r = True
     canvas.create_oval(
-        nodexy[ndx][1],
-        nodexy[ndx][2],
-        nodexy[ndx][1] + 20,
-        nodexy[ndx][2] + 20,
+        sink[0],
+        sink[1],
+        sink[0] + 40,
+        sink[1] + 40,
         fill=bcol,
         width=wdt,
         outline=col,
     )
     canvas.create_text(
-        nodexy[ndx][1] + 10,
-        nodexy[ndx][2] + 10,
-        text=str(nodexy[ndx][0]),
+        sink[0] + 20,
+        sink[1] + 20,
+        text="SINK",
         fill="red",
         font=("Helvetica 10 bold"),
     )
@@ -266,7 +329,9 @@ def find_nearesr_node(x, y):
 
 # *********************************************
 def draw_grps():
-    global lbl_scor
+    global lbl_scor, grpsize, tx_range
+    tx_range = float(text_txrng.get()) * dstMx / 100.0
+    grpsize = int(text_grpmx.get())
     grs = grpsize  # input number of clusters
     clst.nodes = node
     nodGrp = clst.make_nodGrp(nodemx, grs)  # number of nodes per cluster
@@ -278,17 +343,26 @@ def draw_grps():
 
 # *********************************************
 def draw_wsn():
+    global far_nod_err
     canvas.delete("all")
     dist = 0
+    far_nod_err = 0
     for val in range(len(clst.nodes)):
         n1 = clst.nodes[val][3]
         x1 = clst.nodes[val][1] + 10
         y1 = clst.nodes[val][2] + 10
         x2 = clst.nodes[n1][1] + 10
         y2 = clst.nodes[n1][2] + 10
-        canvas.create_line(x1, y1, x2, y2, width=3, fill="blue")  # draw line
+        if distance_n1_n2(n1, val) >= tx_range:
+            canvas.create_line(x1, y1, x2, y2, width=3, fill="red")
+            far_nod_err = far_nod_err + 1
+        else:
+            canvas.create_line(x1, y1, x2, y2, width=3, fill="blue")  # draw line
         dist += math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
-    lbl_scor.config(text="Len:" + str(int(dist)))
+        err = ""
+        if far_nod_err > 0:
+            err = " Err:" + str(far_nod_err)
+    lbl_scor.config(text="Len:" + str(int(dist)) + err)
     for val in range(len(clst.nodes)):
         canvas.create_oval(
             clst.nodes[val][1],
@@ -305,12 +379,13 @@ def draw_wsn():
             fill="red",
             font=("Helvetica 10 bold"),
         )  # draw nodes number
+    draw_sink(sink, "green", 4, "yellow")
     canvas.pack()
 
 
 # *********************************************
 def optimize_grps():
-    global dstMx
+    global dstMxoptimize_grpserr
     count = 0
     for i in range(len(clst.nodes)):
         d1x = clst.nodes[i][1]
@@ -334,6 +409,14 @@ def optimize_grps():
     a = 123
 
 
+# Remove Sink *************************************************
+def remove_sink():
+    global sink
+    sink = (-50, -50)
+    re_draw_nodes()
+    a = 123
+
+
 # Mouse event handlers *****************************************
 def on_mouse_press3(event):
     global mouse_position
@@ -343,9 +426,13 @@ def on_mouse_press3(event):
 
 # Mouse event handlers ****************************************
 def on_mouse_press(event):
-    global drawing, nodexy, mouse_position
+    global drawing, nodexy, mouse_position, chkbx_sink, sink
     x, y = event.x, event.y
-    mouse_position = (x, y)
+    mouse_position = (x - 20, y - 20)
+    if chkbx_sink.get() == 1:
+        chkbx_sink.set(0)
+        sink = mouse_position
+        re_draw_nodes()
 
 
 # **************************************************************
@@ -469,8 +556,8 @@ def on_resize(event):
 
 # **************************************************************
 def main_menu():
-    global window, canvas, screen_width, screen_height, single_step
-    global gridX, gridY, dstMx, lbl_scor
+    global window, canvas, screen_width, screen_height, text_txrng, distmax
+    global gridX, gridY, dstMx, lbl_scor, text_ndmx, text_grpmx, chkbx_sink
     window.title("WSN Clustering-HSM")
     window.bind("<Configure>", on_resize)  # Configure the resize event handler
 
@@ -478,33 +565,40 @@ def main_menu():
     # screen_width = window.winfo_screenwidth() / 1
     # screen_height = window.winfo_screenheight() / 1
     screen_width, screen_height = 800, 600
-
     # Create the status bar.....................................
     status_bar = tk.Frame(window, bd=1, relief=tk.SUNKEN)
     status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-    lbl_ndmx = tk.Label(status_bar, text="Max Nodes ")  # Create a lablr
-    lbl_ndmx.pack(side=tk.LEFT, fill=tk.X, expand=False)
-    text_ndmx = tk.Entry(status_bar, width=5)  # Create a text box
-    text_ndmx.pack(side=tk.LEFT, fill=tk.X, expand=False)
+    lbl_txrng = tk.Label(status_bar, text="Tx Rng %")  # Create a lablr
+    lbl_txrng.pack(side=tk.LEFT, fill=tk.X)
+    text_txrng = tk.Entry(status_bar, width=5)  # Create Tx Rng TextBox
+    text_txrng.pack(side=tk.LEFT, fill=tk.X)
+    text_txrng.insert(tk.END, "20")
+    lbl_ndmx = tk.Label(status_bar, text=" Mx Nod")  # Create a lablr
+    lbl_ndmx.pack(side=tk.LEFT, fill=tk.X)
+    text_ndmx = tk.Entry(status_bar, width=5)  # Create Mx Nod TextBox
+    text_ndmx.pack(side=tk.LEFT, fill=tk.X)
     text_ndmx.insert(tk.END, "100")
-    lbl_grpmx = tk.Label(status_bar, text="Max Groups ")  # Create a lablr
-    lbl_grpmx.pack(side=tk.LEFT, fill=tk.X, expand=False)
-    text_grpmx = tk.Entry(status_bar, width=4)  # Create a text
-    text_grpmx.pack(side=tk.LEFT, fill=tk.X, expand=False)
+    lbl_grpmx = tk.Label(status_bar, text=" Mx Grp")  # Create a lablr
+    lbl_grpmx.pack(side=tk.LEFT, fill=tk.X)
+    text_grpmx = tk.Entry(status_bar, width=3)  # Create Mx Grp TextBox
+    text_grpmx.pack(side=tk.LEFT, fill=tk.X)
     text_grpmx.insert(tk.END, "5")
     btn_nodes = tk.Button(
         status_bar, text="Nodes", command=lambda: draw_nodes()
-    )  # Create a button
+    )  # Create Nodes button
     btn_nodes.pack(side=tk.LEFT)
     btn_clust = tk.Button(
         status_bar, text="Cluster", command=lambda: draw_grps()
-    )  # Create a button
-    btn_clust.pack(side=tk.LEFT)
+    )  # Create Cluster button
     btn_clust.pack(side=tk.LEFT)
     btn_imprv = tk.Button(
         status_bar, text="Optimiz", command=lambda: optimize_grps()
-    )  # Create a butto
+    )  # Create Optimiz button
     btn_imprv.pack(side=tk.LEFT)
+    btn_atogrp = tk.Button(
+        status_bar, text="AtoGrp", command=lambda: auto_grouping()
+    )  # Create Auto Grouping button
+    btn_atogrp.pack(side=tk.LEFT)
     lbl_scor = tk.Label(  # Create a label
         status_bar, text="Score:    ", bd=1, anchor=tk.W
     )
@@ -523,20 +617,14 @@ def main_menu():
     menubar.add_cascade(label="File", menu=file_menu)
     tool_menu = tk.Menu(menubar, tearoff=0)  # Create the tool menu
     menubar.add_cascade(label="Tool", menu=tool_menu)
-    # Create a label on the menu bar
-    label2 = tk.Label(menubar)  # , text="Hello, Menu Bar!", padx=100)
-    menubar.add_cascade(label="Score", menu=label2)
-    menubar.add_cascade(label="Hsm", menu=label2)
-
-    # # Create the checkbox within the sub-menu
-    # single_step = tk.IntVar()
-    # single_step.set(0)
-    # tool_menu.add_checkbutton(label="Single Step", variable=single_step)
 
     # Add options to the file menu
     file_menu.add_command(label="Max Nodes ", command=lambda: open_popup_max_nodes())
     file_menu.add_command(label="Groups ", command=lambda: open_popup_max_groups())
-    file_menu.add_command(label="AutoGroups ", command=lambda: open_popup_auto_groups())
+    file_menu.add_command(
+        label="Tx Range ", command=lambda: open_popup_transmit_range()
+    )
+    file_menu.add_command(label="AutoGroups ", command=lambda: auto_grouping())
     file_menu.add_command(label="Draw Nodes (cnt+d)", command=lambda: draw_nodes())
     file_menu.add_command(label="ReDraw Nodes (cnt+r)", command=lambda: re_draw_nodes())
     file_menu.add_command(label="Cluster Nodes (cnt+c)", command=lambda: draw_grps())
@@ -549,30 +637,31 @@ def main_menu():
     file_menu.add_command(label="Save Image (cnt+i)", command=lambda: save_image_file())
     file_menu.add_separator()
     file_menu.add_command(label="Exit (cnt+x)", command=window.quit)
-
+    # Add options to the tool menu
+    chkbx_sink = tk.IntVar()
+    chkbx_sink.set(0)
+    tool_menu.add_checkbutton(label="Place Sink", variable=chkbx_sink)
+    tool_menu.add_command(label="Remove Sinc", command=lambda: remove_sink())
     # register the hotkey using the keyboard library
-    # keyboard.add_hotkey("ctrl+n", open_popup_max_nodes)
     keyboard.add_hotkey("ctrl+d", draw_nodes)
     keyboard.add_hotkey("ctrl+r", re_draw_nodes)
     keyboard.add_hotkey("ctrl+c", draw_grps)
     keyboard.add_hotkey("ctrl+o", optimize_grps)
     keyboard.add_hotkey("ctrl+i", save_image_file)
     keyboard.add_hotkey("ctrl+x", window.quit)
-
     # Bind the mouse event handlers to the canvas
     canvas.bind("<ButtonPress-3>", on_mouse_press3)
     canvas.bind("<ButtonPress-1>", on_mouse_press)
     canvas.bind("<ButtonRelease-1>", on_mouse_release)
     canvas.bind("<B1-Motion>", on_mouse_move)
 
-    # Run the main loop
-    window.mainloop()
+    distmax = math.sqrt(screen_width * screen_width + screen_height * screen_height)
+    window.mainloop()  # Run the main loop
 
 
 # Start the program ********************************************
 window = tk.Tk()
 print(os.path.dirname(__file__))
 main_menu()
-
 
 # **************************************************************
